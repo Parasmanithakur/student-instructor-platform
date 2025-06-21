@@ -7,7 +7,8 @@ from flask_cors import CORS
 from mongoConn import MongoDBClient
 import os
 from dotenv import load_dotenv
-
+from flasgger import Swagger, swag_from   
+from ChatBot import chat       
 app = Flask(__name__)
 CORS(app)
 
@@ -15,7 +16,11 @@ db = MongoDBClient()
 load_dotenv()
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
-
+app.config['SWAGGER'] = {
+    "title": "Student‑Instructor Platform API",
+    "uiversion": 3
+}
+swagger = Swagger(app)
 def generate_token(user):
     return jwt.encode(
         {
@@ -54,6 +59,32 @@ def role_required(required_role):
 
 
 @app.route('/signup', methods=['POST'])
+@swag_from({                                  
+    'tags': ['Auth'],
+    'summary': 'Create a new account (student or instructor)',
+    'parameters': [
+        {
+            'name': 'body',
+            'in': 'body',
+            'required': True,
+            'schema': {
+                'type': 'object',
+               'properties': {
+                        'username': {'type': 'string'},
+                        'password': {'type': 'string'},
+                        'role':     {'type': 'string',
+                                     'enum': ['student', 'instructor']}
+                    },
+                'required': ['username', 'password']
+            }
+        }
+    ],
+    'responses': {
+        201: {'description': 'Account created, JWT returned'},
+        400: {'description': 'Missing data'},
+        409: {'description': 'Username exists'}
+    }
+})
 def signup():
     data = request.json or {}
     username = data.get('username')
@@ -81,6 +112,33 @@ def signup():
 
 
 @app.route('/login', methods=['POST'])
+@swag_from({
+    'tags': ['Auth'],
+    'summary': 'Authenticate user and return JWT',
+    'parameters': [
+        {
+            'name': 'body',
+            'in': 'body',
+            'required': True,
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'username': {'type': 'string'},
+                    'password': {'type': 'string'}
+                },
+                'required': ['username', 'password']
+            }
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'JWT token returned on successful login'
+        },
+        401: {
+            'description': 'Invalid credentials'
+        }
+    }
+})
 def login():
     data = request.json or {}
     username = data.get('username')
@@ -97,6 +155,12 @@ def login():
 @app.route('/student/dashboard', methods=['GET'])
 @token_required
 @role_required('student')
+@swag_from({
+    'tags': ['Student'],
+    'summary': 'Student dashboard (JWT required)',
+    'security': [{'Bearer': []}],
+    'responses': {200: {'description': 'Welcome student'}}
+})
 def student_dashboard(current_user):
     return jsonify({'message': f"Welcome, {current_user['username']} (Student)"})
 
@@ -105,6 +169,44 @@ def student_dashboard(current_user):
 @role_required('instructor')
 def instructor_dashboard(current_user):
     return jsonify({'message': f"Welcome, {current_user['username']} (Instructor)"})
+
+
+@app.route('/chatter'   , methods=['POST'])
+@swag_from({
+    'tags': ['Chat'],
+    'summary': 'Chat with the AI assistant',
+   
+    'parameters': [
+        {
+            'name': 'body',
+            'in': 'body',
+            'required': True,
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'message': {'type': 'string'},
+                    'context': {'type': 'string'}
+                },
+                'required': ['message', 'context']
+            }
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Success response',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'response': {'type': 'string'}
+                }
+            }
+        }
+    }
+})
+def chater():
+    data = request.json or {}
+    print ("DASDADA",data)
+    return chat(data)
 
 if __name__ == '__main__':
     app.run(debug=True)

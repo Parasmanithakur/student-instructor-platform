@@ -14,7 +14,9 @@ class MongoDBClient:
         try:
             print("Connecting to MongoDB...")
             # self.client.admin.command('ping')
-            # print("Pinged your deployment. You successfully connected to MongoDB!")
+            # # print("Pinged your deployment. You successfully connected to MongoDB!")
+            self.db = self.client["auth_db"]
+            self.users = self.db["users"]
         except Exception as e:
             print(e)
 
@@ -28,4 +30,3 @@ class MongoDBClient:
 
     def close(self):
         self.client.close()
-
