@@ -98,7 +98,7 @@ const StyledLinearProgress = styled(LinearProgress)(({ theme, value }) => ({
   }
 }));
 
-const StudentDashboard = () => {
+const StudentDashboard = ({user}) => {
   const [courses, setCourses] = useState(null);
   const [loading, setLoading] = useState(true);
   const theme = useTheme();
@@ -107,7 +107,7 @@ const StudentDashboard = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('jwt_token');
         if (!token) throw new Error('No token, using mock data');
 
         const res = await fetch('http://localhost:5000/student/courses', {

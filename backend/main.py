@@ -143,13 +143,20 @@ def login():
     data = request.json or {}
     username = data.get('username')
     password = data.get('password')
+    print("Login data:", data)
+    try:
+        if not username or not password:
+            return jsonify({'message': 'Username & password required'}), 400
+        user = db.users.find_one({'username': username})
+        print("User found:", user)
+        if not user or not check_password_hash(user['password'], password):
+            return jsonify({'message': 'Invalid credentials'}), 401
 
-    user = db.users.find_one({'username': username})
-    if not user or not check_password_hash(user['password'], password):
-        return jsonify({'message': 'Invalid credentials'}), 401
-
-    token = generate_token(user)
-    return jsonify({'token': token})
+        token = generate_token(user)
+        return jsonify({'token': token})
+    except Exception as e:
+        print("Error during login:", e)
+        return jsonify({'message': 'An error occurred', 'error': str(e)}), 500
 
 
 @app.route('/student/dashboard', methods=['GET'])

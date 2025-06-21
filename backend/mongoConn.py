@@ -13,8 +13,8 @@ class MongoDBClient:
         self.client = MongoClient(uri, server_api=ServerApi('1'))
         try:
             print("Connecting to MongoDB...")
-            # self.client.admin.command('ping')
-            # # print("Pinged your deployment. You successfully connected to MongoDB!")
+            self.client.admin.command('ping')
+            print("Pinged your deployment. You successfully connected to MongoDB!")
             self.db = self.client["auth_db"]
             self.users = self.db["users"]
         except Exception as e:
@@ -24,9 +24,13 @@ class MongoDBClient:
         return self.client[db_name]
 
     def run_query(self, db_name, collection_name, query):
-        db = self.get_database(db_name)
-        collection = db[collection_name]
-        return list(collection.find(query))
+        try:
+            db = self.get_database(db_name)
+            collection = db[collection_name]
+            return list(collection.find(query))
+        except Exception as e:
+            print(f"Error running query: {e}")
+            return []
 
     def close(self):
         self.client.close()

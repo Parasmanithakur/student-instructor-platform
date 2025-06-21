@@ -10,3 +10,11 @@ export const registerUser = async (form) => {
     });
     return res.data;
 };
+
+export const loginUser = async ({ username, password, role }) => {
+    const url = BaseApi + '/login';
+    const res = await axios.post(url, { username, password, role }, {
+        headers: { 'Content-Type': 'application/json' }
+    });
+    return res.data;
+};

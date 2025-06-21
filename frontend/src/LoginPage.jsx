@@ -13,22 +13,26 @@ import {
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { Link as RouterLink } from 'react-router-dom';
-const LoginPage = () => {
+import {   loginUser } from './Utils/ApiUtils';
+import jwtDecode from "jwt-decode";
+const LoginPage = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('student');
   const navigate = useNavigate();
 
   const handleLogin = async () => {
-    const res = await fetch("http://localhost:5000/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password, role })
-    });
-
-    const data = await res.json();
-    if (res.ok) {
-      localStorage.setItem("token", data.token);
+    const res = await loginUser({ username, password, role });
+    console.log(res);
+    if (res?.token) {
+      localStorage.setItem("token", res?.toke);
+      const decoded = jwtDecode(token);
+      const user = {
+        username: decoded.sub,
+        role: decoded.role,
+        token: token,
+      };
+      onLogin(user);
       if (role === "student") navigate("/student/dashboard");
       else if (role === "instructor") navigate("/instructor/dashboard");
     } else {
