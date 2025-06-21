@@ -15,8 +15,13 @@ class MongoDBClient:
             print("Connecting to MongoDB...")
             self.client.admin.command('ping')
             print("Pinged your deployment. You successfully connected to MongoDB!")
-            self.db = self.client["auth_db"]
+            self.db = self.client["StudentInstrustor"]
             self.users = self.db["users"]
+            self.courses = self.db["courses"]
+            self.assignments = self.db["assignments"]  
+            self.submissions = self.db["submissions"]
+            self.enrollments = self.db["enrollments"]
+            self.logs = self.db["logs"]
         except Exception as e:
             print(e)
 

@@ -26,6 +26,7 @@ def generate_token(user):
         {
             'sub': user['username'],
             'role': user['role'],
+            '_id': str(user.get('_id', '')),
             'exp': datetime.utcnow() + timedelta(minutes=30)
         },
         app.config['SECRET_KEY'],
@@ -153,11 +154,76 @@ def login():
             return jsonify({'message': 'Invalid credentials'}), 401
 
         token = generate_token(user)
+        db.logs.insert_one({
+            'username': username,
+            'action': 'login',
+            'timestamp': datetime.utcnow(),
+            'status': 'success'
+        })
         return jsonify({'token': token})
     except Exception as e:
         print("Error during login:", e)
         return jsonify({'message': 'An error occurred', 'error': str(e)}), 500
 
+@app.route('/student/courses', methods=['GET'])
+@token_required
+@role_required('student')
+@swag_from({
+    'tags': ['Student'],
+    'summary': 'Get courses for the authenticated student',
+    'security': [{'Bearer': []}],
+    'responses': {
+        200: {
+            'description': 'List of courses for the student',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'courses': {
+                        'type': 'array',
+                        'items': {'type': 'object'}
+                    }
+                }
+            }
+        },
+        404: {'description': 'No courses found for student'}
+    }
+})
+def get_student_courses(current_user):
+    student_username = current_user['username']
+    courses = list(db.enrollments.find({'students': student_username}, {'_id': 0}))
+ 
+
+    result = []
+    for course in courses:
+        course_id = course.get('_id')
+        # Get course details
+        course_details = db.courses.find_one({'_id': course_id}, {'_id': 1, 'name': 1, 'description': 1})
+        if not course_details:
+            continue
+
+        # Find assignments for this course
+        assignments = list(db.assignments.find({'course_id': course_id}, {'_id': 1, 'title': 1}))
+        assignment_ids = [a['_id'] for a in assignments]
+        num_assignments = len(assignments)
+
+        num_submissions = db.submissions.count_documents({
+            'assignment_id': {'$in': assignment_ids},
+            'student': student_username
+        })
+
+        result.append({
+            'course': {
+                '_id': str(course_details['_id']),
+                'name': course_details.get('name', ''),
+                'thumbnail': course_details.get('thumbnail', ''),
+                'description': course_details.get('description', '')
+            },
+            'num_assignments': num_assignments,
+            'num_submissions': num_submissions
+        })
+
+    return jsonify({'courses': result}), 200
+    
 
 @app.route('/student/dashboard', methods=['GET'])
 @token_required
