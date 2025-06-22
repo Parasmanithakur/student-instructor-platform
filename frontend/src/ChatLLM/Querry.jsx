@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TextField, Button, Box, Typography, Paper } from '@mui/material';
+import { sendChatMessage } from '../Utils/ApiUtils';
 
 const ChatBot = () => {
   const [input, setInput] = useState('');
@@ -14,12 +15,10 @@ const ChatBot = () => {
     setInput('');
 
     try {
-      const res = await fetch('http://localhost:5000/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input })
-      });
-      const data = await res.json();
+      const res = await sendChatMessage(input);
+      const data = await res;
+      console.log("Response from API:", data);
+      console.log("Response from chatbot:", data);
       if (data.response) {
         setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
       } else {

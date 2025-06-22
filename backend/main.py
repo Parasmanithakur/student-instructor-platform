@@ -9,6 +9,7 @@ import os
 from dotenv import load_dotenv
 from flasgger import Swagger, swag_from   
 from ChatBot import chat       
+from bson import ObjectId
 app = Flask(__name__)
 CORS(app)
 
@@ -194,41 +195,122 @@ def login():
 })
 def get_student_courses(current_user):
     student_username = current_user['username']
-    courses = list(db.enrollments.find({'students': student_username}, {'_id': 0}))
- 
+    # Get the student's _id from the users collection
+    student = db.users.find_one({'username': student_username}, {'_id': 1})
+    if not student:
+        return jsonify({'message': 'Student not found'}), 404
+    student_id = student['_id']
+
+    # Find enrollments where student_id matches
+    courses = list(db.enrollments.find({'student_id': student_id}, {'_id': 0}))
+    print("Current user:", current_user)
+    print("Student username:", student_username)
+    print("Courses found for student:", courses)
 
     result = []
     for course in courses:
-        course_id = course.get('_id')
+        course_id = course.get('course_id')
         # Get course details
-        course_details = db.courses.find_one({'_id': course_id}, {'_id': 1, 'name': 1, 'description': 1})
+        print("Course ID:", course_id)
+        course_details = db.courses.find_one({'_id': course_id})
+        print("Course details:", course_details)
         if not course_details:
             continue
+    # Get instructor name from instructor_id
+        instructor_id = course_details.get('instructor_id')
+        instructor_name = ""
+        if instructor_id:
+            instructor = db.users.find_one({'_id': instructor_id}, {'username': 1})
+            if instructor:
+                instructor_name = instructor.get('username', '')
 
+  
         # Find assignments for this course
         assignments = list(db.assignments.find({'course_id': course_id}, {'_id': 1, 'title': 1}))
-        assignment_ids = [a['_id'] for a in assignments]
-        num_assignments = len(assignments)
-
-        num_submissions = db.submissions.count_documents({
-            'assignment_id': {'$in': assignment_ids},
+        assignment_status = []
+        for assignment in assignments:
+            assignment_id = assignment['_id']
+            submission = db.submissions.find_one({
+            'assignment_id': assignment_id,
             'student': student_username
-        })
-
+            })
+            assignment_status.append({
+            'assignment_id': int(assignment_id),
+            'title': assignment.get('title', ''),
+            'submitted': submission is not None
+            })
+        print("Assignments for course:", assignments)
+        total_assignments = len(assignments)
+        submitted_assignments = sum(1 for a in assignment_status if a['submitted'])
+        progress = int((submitted_assignments / total_assignments) * 100) if total_assignments > 0 else 0
         result.append({
-            'course': {
-                '_id': str(course_details['_id']),
-                'name': course_details.get('name', ''),
-                'thumbnail': course_details.get('thumbnail', ''),
-                'description': course_details.get('description', '')
-            },
-            'num_assignments': num_assignments,
-            'num_submissions': num_submissions
+            '_id': str(course_details['_id']),
+            'name': course_details.get('name', ''),
+            'instructor': instructor_name,
+            'thumbnail': course_details.get('thumbnail', ''),
+            'description': course_details.get('description', ''),
+            'category': course_details.get('tags', [])[0] if course_details.get('tags') else '',
+            "dueDate": '2025-07-15T00:00:00Z',
+            "assignment_status" : assignment_status,
+            "progress": progress,
+            "isCompleted": progress >= 100? True : False,
         })
 
     return jsonify({'courses': result}), 200
     
+@app.route('/student/assignments/<assignment_id>/submit', methods=['PATCH'])
+@token_required
+@role_required('student')
+@swag_from({
+    'tags': ['Student'],
+    'summary': 'Submit an assignment',
+    'parameters': [
+        {
+            'name': 'assignment_id',
+            'in': 'path',
+            'type': 'string',
+            'required': True,
+            'description': 'Assignment ID'
+        }
+    ],
+    'security': [{'Bearer': []}],
+    'responses': {
+        200: {'description': 'Assignment submitted successfully'},
+        400: {'description': 'Already submitted or invalid assignment'},
+        404: {'description': 'Assignment not found'}
+    }
+})
+def submit_assignment(current_user, assignment_id):
+    student_username = current_user['username']
+    try:
+        assignment = db.assignments.find_one({'_id': int(assignment_id)})
+        if not assignment:
+            return jsonify({'message': 'Assignment not found'}), 404
 
+        # Find the student's _id
+        student = db.users.find_one({'username': student_username}, {'_id': 1})
+        if not student:
+            return jsonify({'message': 'Student not found'}), 404
+        student_id = student['_id']
+
+        existing = db.submissions.find_one({
+            'assignment_id': int(assignment_id),
+            'student_id': student_id
+        })
+        if existing:
+            return jsonify({'message': 'Assignment already submitted'}), 400
+
+        submission = {
+            'assignment_id': int(assignment_id),
+            'student': student_username,
+            'student_id': student_id,
+            'submitted_at': datetime.utcnow(),
+            'status': 'submitted'
+        }
+        db.submissions.insert_one(submission)
+        return jsonify({'message': 'Assignment submitted successfully'}), 200
+    except Exception as e:
+        return jsonify({'message': 'Error submitting assignment', 'error': str(e)}), 500
 @app.route('/student/dashboard', methods=['GET'])
 @token_required
 @role_required('student')

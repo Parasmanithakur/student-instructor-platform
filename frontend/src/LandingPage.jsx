@@ -93,11 +93,11 @@ const LandingPage = () => {
                 <div className="testimonials">
                     <div className="testimonial">
                         <p>"The AI assistant helped me understand complex concepts when my instructor wasn't available."</p>
-                        <div className="testimonial-author">- Sarah, Computer Science Student</div>
+                        <div className="testimonial-author">- Karan, Computer Science Student</div>
                     </div>
                     <div className="testimonial">
                         <p>"The progress dashboard keeps my students motivated and helps me identify who needs extra help."</p>
-                        <div className="testimonial-author">- Prof. Johnson, Mathematics Instructor</div>
+                        <div className="testimonial-author">- Prof. Lokhande, Mathematics Instructor</div>
                     </div>
                 </div>
             </section>

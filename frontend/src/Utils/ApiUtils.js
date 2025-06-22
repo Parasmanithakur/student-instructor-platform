@@ -21,10 +21,34 @@ export const loginUser = async ({ username, password, role }) => {
     });
     return res.data;
 };
-export const getCourses = async (token) => {
+export const getStudentCourses = async (token) => {
     const url = BaseApi + '/student/courses';
-    const res = await fetch(url, {
+    const res = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
     });
-    return await res.json();
+    return res.data;
+};
+
+export const sendChatMessage = async (input) => {
+    try {
+        const url = BaseApi + '/chatter';
+        const res = await axios.post(url, { message: input }, {
+            headers: { 'Content-Type': 'application/json' }
+        });
+        console.log("Response from API:", res.data);
+        return res.data;
+    } catch (error) {
+        return { error: error.message };
+    }
+};
+export const submitAssignment = async (token, assignmentNumber) => {
+    try {
+        const url = `${BaseApi}/student/assignments/${assignmentNumber}/submit`;
+        const res = await axios.patch(url, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return res.data;
+    } catch (error) {
+        return { error: error.message };
+    }
 };
