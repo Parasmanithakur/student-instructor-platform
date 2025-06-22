@@ -128,19 +128,36 @@ const StudentDashboard = ({user}) => {
 
   const handleComplete = async (assignmentId) => {
     setCourses((prev) =>
-      prev.map((course) => {
-        if (Array.isArray(course.assignment_status)) {
-          return {
-            ...course,
-            assignment_status: course.assignment_status.map((assignment) =>
-              assignment.assignment_id === assignmentId
-                ? { ...assignment, submitted: true }
-                : assignment
-            ),
-          };
-        }
-        return course;
-      })
+        prev.map((course) => {
+            if (Array.isArray(course.assignment_status)) {
+                // Check if this course contains the assignment being submitted
+                const updatedAssignments = course.assignment_status.map((assignment) =>
+                    assignment.assignment_id === assignmentId
+                        ? { ...assignment, submitted: true }
+                        : assignment
+                );
+                // If the assignment was in this course, update submitted_assignments and progress
+                const wasSubmitted = course.assignment_status.some(
+                    (assignment) => assignment.assignment_id === assignmentId
+                );
+                if (wasSubmitted) {
+                    const submitted_assignments = updatedAssignments.filter(a => a.submitted).length;
+                    const total_assignments = course.total_assignments || updatedAssignments.length;
+                    const progress = Math.round((submitted_assignments / total_assignments) * 100);
+                    return {
+                        ...course,
+                        assignment_status: updatedAssignments,
+                        submitted_assignments,
+                        progress
+                    };
+                }
+                return {
+                    ...course,
+                    assignment_status: updatedAssignments
+                };
+            }
+            return course;
+        })
     );
 
     try {

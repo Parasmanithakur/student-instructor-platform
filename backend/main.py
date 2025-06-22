@@ -253,6 +253,9 @@ def get_student_courses(current_user):
             "dueDate": '2025-07-15T00:00:00Z',
             "assignment_status" : assignment_status,
             "progress": progress,
+            "submitted_assignments":submitted_assignments,
+            "total_assignments":total_assignments,
+
             "isCompleted": True if progress >= 100 else False,
         })
 
