@@ -90,6 +90,7 @@ def signup():
     data = request.json or {}
     username = data.get('username')
     password = data.get('password')
+    email    = data.get('email', '')
     role     = data.get('role', 'student')        
 
     if not username or not password:
@@ -97,6 +98,9 @@ def signup():
 
     if db.users.find_one({'username': username}):
         return jsonify({'message': 'Username already exists'}), 409
+    
+    if db.users.find_one({'email': email}):
+        return jsonify({'message': 'email already exists'}), 409
 
     hashed_pw = generate_password_hash(password)
 

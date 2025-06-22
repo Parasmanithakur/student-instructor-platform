@@ -134,7 +134,7 @@ const StudentDashboard = ({user}) => {
     );
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('jwt_token');
       if (!token) return; // on mock mode, skip API call
 
       await fetch(`http://localhost:5000/student/courses/${courseId}/complete`, {

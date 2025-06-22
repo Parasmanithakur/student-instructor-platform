@@ -9,7 +9,7 @@ import {
   InputLabel,
   FormControl,
   Box,
-  Paper
+  Paper,Alert
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { Link as RouterLink } from 'react-router-dom';
@@ -28,18 +28,30 @@ const SignupPage = () => {
 
   const handleSignup = async () => {
     const res = await registerUser(form);
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      alert(errorData.message || "Signup failed");
+    console.log("ress",res);
+    if (res?.error) {
+      const errorData =  res;
+      setError(errorData.message || "Signup failed");
       return;
     }
-    const data = await res.json();
-    alert(data.message);
-  };
+    const data = await res;
+setSuccess(true)
 
+  };
+const [error, setError] = useState("");
+const [success, setSuccess] = useState("");
   return (
-    <Container maxWidth="sm">
+    <Container maxWidth="sm">{error && (
+  <Alert severity="error" onClose={() => setError("")}>
+    {error}
+  </Alert>
+)}
+
+{success && (
+  <Alert severity="success" onClose={() => setSuccess("")}>
+    {success}
+  </Alert>
+)}
       <Paper elevation={3} sx={{ padding: 4, mt: 10 }}>
         <Typography variant="h4" align="center" gutterBottom>
           Signup

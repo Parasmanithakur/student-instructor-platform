@@ -4,6 +4,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import SignupPage from './SignupPage';
 import LoginPage from './LoginPage';
 import StudentDashboard from './Dashboards/StudentDashboard';
+import { useEffect, useState } from 'react';
+import InstructorDashboard from './Dashboards/InstructorDashboard';
 
 function App() {
 const [user, setUser] = useState(null);
@@ -37,6 +39,8 @@ const [user, setUser] = useState(null);
         <Route path="/login" element={<LoginPage onLogin={setUser} />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/student/dashboard/*" element={<StudentDashboard user={user} />} />
+        <Route path="/instructor/dashboard/*" element={<InstructorDashboard/>} />
+        {/* Add more routes as needed */}
       </Routes>
     </Router>
 

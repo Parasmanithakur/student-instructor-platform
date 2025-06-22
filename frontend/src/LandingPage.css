@@ -1,68 +1,250 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+.landing-container {
+  text-align: center;
+  padding: 40px;
+  font-family: sans-serif;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+.carousel-wrapper {
+  max-width: 600px;
+  margin: 30px auto;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+.carousel-slide {
+  padding: 30px;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+.landing-buttons {
+  margin-top: 20px;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
+.landing-buttons button {
+  padding: 10px 20px;
+  font-size: 16px;
 }
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+/* Base Styles */
+.landing-container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+/* Hero Section */
+.hero-section {
+    text-align: center;
+    padding: 60px 20px;
+    background: linear-gradient(135deg, #6e8efb, #a777e3);
+    color: white;
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+.hero-title {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    margin-bottom: 30px;
+}
+
+.cta-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.cta-button {
+    padding: 12px 30px;
+    border-radius: 30px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.cta-button.login {
+    background: white;
+    color: #6e8efb;
+    border: 2px solid white;
+}
+
+.cta-button.login:hover {
+    background: transparent;
+    color: white;
+}
+
+.cta-button.signup {
+    background: transparent;
+    color: white;
+    border: 2px solid white;
+}
+
+.cta-button.signup:hover {
+    background: white;
+    color: #6e8efb;
+}
+
+/* Carousel Section */
+.carousel-section {
+    margin: 40px 0;
+}
+
+.main-carousel {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.carousel-slide {
+    position: relative;
+    height: 500px;
+}
+
+.carousel-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.carousel-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    padding: 30px;
+    text-align: left;
+}
+
+.carousel-overlay h3 {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+}
+
+.carousel-overlay p {
+    font-size: 1.2rem;
+}
+
+/* Features Section */
+.section-title {
+    text-align: center;
+    font-size: 2rem;
+    margin: 50px 0 30px;
+    color: #444;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    margin: 40px 0;
+}
+
+.feature-card {
+    background: white;
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+.feature-card h3 {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    color: #6e8efb;
+}
+
+/* Testimonial Section */
+.testimonial-section {
+    background: #f9f9f9;
+    padding: 60px 20px;
+    margin: 40px 0;
+    border-radius: 10px;
+}
+
+.testimonials {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.testimonial {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    position: relative;
+}
+
+.testimonial p {
+    font-style: italic;
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+}
+
+.testimonial-author {
+    font-weight: bold;
+    color: #6e8efb;
+}
+
+/* Footer */
+.landing-footer {
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #a777e3, #6e8efb);
+    color: white;
+    border-radius: 10px;
+    margin-bottom: 40px;
+}
+
+.landing-footer .cta-button {
+    display: inline-block;
+    background: white;
+    color: #6e8efb;
+    border: none;
+    margin-top: 20px;
+}
+
+.landing-footer .cta-button:hover {
+    background: rgba(255,255,255,0.9);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .carousel-slide {
+        height: 350px;
+    }
+    
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .cta-button {
+        width: 80%;
+        text-align: center;
+    }
 }
