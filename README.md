@@ -20,6 +20,11 @@
     python -m venv venv
     source venv/bin/activate  # On Windows: venv\Scripts\activate
     ```
+2. (Anaconda optional ) Create a virtual env
+    ```
+    conda create -y -n py312 python=3.12.**
+    conda activate py312
+    ```    
 3. Install dependencies:
     ```bash
     pip install -r requirements.txt
