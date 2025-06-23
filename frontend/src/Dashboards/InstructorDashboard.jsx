@@ -40,52 +40,7 @@ import { getInstructorCourses } from '../Utils/ApiUtils';
 import NotAllowed from './NotAllowed';
 import { useNavigate } from 'react-router-dom';
 
-// /**
-//  * Mock data - replace with real API calls
-//  */
-// const DEFAULT_INSTRUCTOR_COURSES = [
-//   {
-//     _id: '1',
-//     name: 'Intro to Python',
-//     thumbnailUrl: 'https://source.unsplash.com/random/600x400/?python',
-//     totalStudents: 42,
-//     activeStudents: 35,
-//     completionRate: 68,
-//     lastUpdated: '2025-06-20T10:30:00Z',
-//     category: 'Programming',
-//     assignments: [
-//       { name: 'Variables Exercise', dueDate: '2025-07-01T00:00:00Z' },
-//       { name: 'Functions Project', dueDate: '2025-07-15T00:00:00Z' }
-//     ]
-//   },
-//   {
-//     _id: '2',
-//     name: 'Web Development Basics',
-//     thumbnailUrl: 'https://source.unsplash.com/random/600x400/?web,development',
-//     totalStudents: 28,
-//     activeStudents: 25,
-//     completionRate: 82,
-//     lastUpdated: '2025-06-18T14:15:00Z',
-//     category: 'Web Development',
-//     assignments: [
-//       { name: 'HTML/CSS Portfolio', dueDate: '2025-07-10T00:00:00Z' }
-//     ]
-//   },
-//   {
-//     _id: '3',
-//     name: 'Advanced Machine Learning',
-//     thumbnailUrl: 'https://source.unsplash.com/random/600x400/?machine,learning',
-//     totalStudents: 15,
-//     activeStudents: 12,
-//     completionRate: 45,
-//     lastUpdated: '2025-06-15T09:45:00Z',
-//     category: 'AI',
-//     assignments: [
-//       { name: 'Neural Network Project', dueDate: '2025-08-01T00:00:00Z' },
-//       { name: 'Research Paper Review', dueDate: '2025-07-20T00:00:00Z' }
-//     ]
-//   }
-// ];
+
 
 const StyledBadge = styled(Badge)(({ theme }) => ({
   '& .MuiBadge-badge': {

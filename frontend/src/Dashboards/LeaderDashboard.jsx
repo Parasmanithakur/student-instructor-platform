@@ -25,7 +25,6 @@ const Leaderboard = ({ user }) => {
     const fetchLeaderboard = async () => {
       try {
         const data = await getLeaderboardData();
-        // Process data to aggregate by student
         const studentMap = {};
         
         data.forEach(item => {
@@ -42,7 +41,6 @@ const Leaderboard = ({ user }) => {
           studentMap[item.username].courses.push(item.course);
         });
 
-        // Convert to array and sort by total score
         const rankedStudents = Object.values(studentMap)
           .sort((a, b) => b.totalScore - a.totalScore)
           .map((student, index) => ({
