@@ -107,6 +107,7 @@ const LandingPage = () => {
                 <Link to="/signup" className="cta-button">Get Started Now</Link>
             </footer>
         </div>
+        
     );
 };
 

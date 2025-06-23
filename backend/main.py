@@ -149,6 +149,7 @@ def login():
     data = request.json or {}
     username = data.get('username')
     password = data.get('password')
+    role     = data.get('role')  # Get role from request
     print("Login data:", data)
     try:
         if not username or not password:
@@ -156,6 +157,10 @@ def login():
         user = db.users.find_one({'username': username})
         print("User found:", user)
         if not user or not check_password_hash(user['password'], password):
+            return jsonify({'message': 'Invalid credentials'}), 401
+
+        # Check if role matches
+        if role and user.get('role') != role:
             return jsonify({'message': 'Invalid credentials'}), 401
 
         token = generate_token(user)
@@ -333,6 +338,78 @@ def instructor_dashboard(current_user):
     return jsonify({'message': f"Welcome, {current_user['username']} (Instructor)"})
 
 
+
+@app.route('/instructor/courses', methods=['GET'])
+@token_required
+@role_required('instructor')
+@swag_from({
+    'tags': ['Instructor'],
+    'summary': 'Get courses for the authenticated instructor',
+    'security': [{'Bearer': []}],
+    'responses': {
+        200: {
+            'description': 'List of courses for the instructor',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'courses': {
+                        'type': 'array',
+                        'items': {'type': 'object'}
+                    }
+                }
+            }
+        },
+        404: {'description': 'No courses found for instructor'}
+    }
+})
+def get_instructor_courses(current_user):
+    instructor_username = current_user['username']
+    instructor = db.users.find_one({'username': instructor_username}, {'_id': 1})
+    if not instructor:
+        return jsonify({'message': 'Instructor not found'}), 404
+    instructor_id = instructor['_id']
+
+    courses = list(db.courses.find({'instructor_id': instructor_id}))
+    result = []
+    for course in courses:
+        course_id = course['_id']
+        # Count total students enrolled
+        total_students = db.enrollments.count_documents({'course_id': course_id})
+        # Count active students (status == 'active')
+        active_students = db.enrollments.count_documents({'course_id': course_id, 'status': 'active'})
+        # Completion rate: students who submitted all assignments
+        assignments = list(db.assignments.find({'course_id': course_id}, {'_id': 1, 'title': 1, 'dueDate': 1}))
+        assignment_ids = [a['_id'] for a in assignments]
+        students = db.enrollments.find({'course_id': course_id}, {'student_id': 1})
+        completed_count = 0
+        for s in students:
+            student_id = s['student_id']
+            submissions = db.submissions.count_documents({'assignment_id': {'$in': assignment_ids}, 'student_id': student_id, 'status': 'submitted'})
+            if assignments and submissions == len(assignments):
+                completed_count += 1
+        completion_rate = int((completed_count / total_students) * 100) if total_students > 0 else 0
+
+        # Assignments info
+        assignments_info = []
+        for a in assignments:
+            assignments_info.append({
+                'name': a.get('title', ''),
+                'dueDate': a.get('dueDate', '2025-07-01T00:00:00Z')
+            })
+
+        result.append({
+            '_id': str(course_id),
+            'name': course.get('name', ''),
+            'thumbnailUrl': course.get('thumbnail', 'https://source.unsplash.com/random/600x400/?python'),
+            'totalStudents': total_students,
+            'activeStudents': active_students,
+            'completionRate': completion_rate,
+            'lastUpdated': course.get('updated_at', '2025-06-20T10:30:00Z'),
+            'category': course.get('tags', ['Programming'])[0] if course.get('tags') else 'Programming',
+            'assignments': assignments_info
+        })
+    return jsonify({'courses': result}), 200
+
 @app.route('/chatter'   , methods=['POST'])
 @swag_from({
     'tags': ['Chat'],
@@ -367,8 +444,120 @@ def instructor_dashboard(current_user):
 })
 def chater():
     data = request.json or {}
-    print ("DASDADA",data)
     return chat(data)
 
+
+    @app.route('/browseCourses', methods=['GET'])
+    @token_required
+    @swag_from({
+        'tags': ['Courses'],
+        'summary': 'Browse all available courses',
+        'security': [{'Bearer': []}],
+        'responses': {
+            200: {
+                'description': 'List of all courses',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'courses': {
+                            'type': 'array',
+                            'items': {'type': 'object'}
+                        }
+                    }
+                }
+            }
+        }
+    })
+    def browse_courses(current_user):
+        courses = list(db.courses.find())
+        result = []
+        for course in courses:
+            instructor = db.users.find_one({'_id': course.get('instructor_id')}, {'username': 1})
+            result.append({
+                '_id': str(course.get('_id')),
+                'name': course.get('name', ''),
+                'description': course.get('description', ''),
+                'thumbnail': course.get('thumbnail', 'https://source.unsplash.com/random/600x400/?course'),
+                'category': course.get('tags', [])[0] if course.get('tags') else '',
+                'instructor': instructor.get('username', '') if instructor else '',
+                'created_at': course.get('created_at', ''),
+            })
+        return jsonify({'courses': result}), 200
+
+
+@app.route('/leaderboard', methods=['GET'])
+@swag_from({
+    'tags': ['Leaderboard'],
+    'summary': 'Get leaderboard data',
+    'responses': {
+        200: {
+            'description': 'Leaderboard data',
+            'schema': {
+                'type': 'array',
+                'items': {
+                    'type': 'object',
+                    'properties': {
+                        'username': {'type': 'string'},
+                        'course': {'type': 'string'},
+                        'submissions': {'type': 'integer'},
+                        'score': {'type': 'integer'}
+                    }
+                }
+            }
+        }
+    }
+})
+def leaderboard():
+    pipeline = [
+        {
+            '$lookup': {
+                'from': 'users',
+                'localField': 'student_id',
+                'foreignField': '_id',
+                'as': 'student'
+            }
+        },
+        {'$unwind': '$student'},
+        {
+            '$lookup': {
+                'from': 'assignments',
+                'localField': 'assignment_id',
+                'foreignField': '_id',
+                'as': 'assignment'
+            }
+        },
+        {'$unwind': '$assignment'},
+        {
+            '$lookup': {
+                'from': 'courses',
+                'localField': 'assignment.course_id',
+                'foreignField': '_id',
+                'as': 'course'
+            }
+        },
+        {'$unwind': '$course'},
+        {
+            '$group': {
+                '_id': {
+                    'username': '$student.username',
+                    'course': '$course.name'
+                },
+                'submissions': {'$sum': 1},
+                'score': {'$sum': {'$cond': [{'$eq': ['$status', 'submitted']}, 10, 0]}}
+            }
+        },
+        {
+            '$project': {
+                '_id': 0,
+                'username': '$_id.username',
+                'course': '$_id.course',
+                'submissions': 1,
+                'score': 1
+            }
+        },
+        {'$sort': {'score': -1, 'submissions': -1}}
+    ]
+    leaderboard_data = list(db.submissions.aggregate(pipeline))
+    return jsonify(leaderboard_data), 200
 if __name__ == '__main__':
     app.run(debug=True)

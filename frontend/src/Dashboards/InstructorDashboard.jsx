@@ -35,53 +35,56 @@ import {
 import { motion } from 'framer-motion';
 import { styled } from '@mui/material/styles';
 import StudentProgressChart from './StudentProgressChart';
+import { getInstructorCourses } from '../Utils/ApiUtils';
+import NotAllowed from './NotAllowed';
+import { useNavigate } from 'react-router-dom';
 
-/**
- * Mock data - replace with real API calls
- */
-const DEFAULT_INSTRUCTOR_COURSES = [
-  {
-    _id: '1',
-    name: 'Intro to Python',
-    thumbnailUrl: 'https://source.unsplash.com/random/600x400/?python',
-    totalStudents: 42,
-    activeStudents: 35,
-    completionRate: 68,
-    lastUpdated: '2025-06-20T10:30:00Z',
-    category: 'Programming',
-    assignments: [
-      { name: 'Variables Exercise', dueDate: '2025-07-01T00:00:00Z' },
-      { name: 'Functions Project', dueDate: '2025-07-15T00:00:00Z' }
-    ]
-  },
-  {
-    _id: '2',
-    name: 'Web Development Basics',
-    thumbnailUrl: 'https://source.unsplash.com/random/600x400/?web,development',
-    totalStudents: 28,
-    activeStudents: 25,
-    completionRate: 82,
-    lastUpdated: '2025-06-18T14:15:00Z',
-    category: 'Web Development',
-    assignments: [
-      { name: 'HTML/CSS Portfolio', dueDate: '2025-07-10T00:00:00Z' }
-    ]
-  },
-  {
-    _id: '3',
-    name: 'Advanced Machine Learning',
-    thumbnailUrl: 'https://source.unsplash.com/random/600x400/?machine,learning',
-    totalStudents: 15,
-    activeStudents: 12,
-    completionRate: 45,
-    lastUpdated: '2025-06-15T09:45:00Z',
-    category: 'AI',
-    assignments: [
-      { name: 'Neural Network Project', dueDate: '2025-08-01T00:00:00Z' },
-      { name: 'Research Paper Review', dueDate: '2025-07-20T00:00:00Z' }
-    ]
-  }
-];
+// /**
+//  * Mock data - replace with real API calls
+//  */
+// const DEFAULT_INSTRUCTOR_COURSES = [
+//   {
+//     _id: '1',
+//     name: 'Intro to Python',
+//     thumbnailUrl: 'https://source.unsplash.com/random/600x400/?python',
+//     totalStudents: 42,
+//     activeStudents: 35,
+//     completionRate: 68,
+//     lastUpdated: '2025-06-20T10:30:00Z',
+//     category: 'Programming',
+//     assignments: [
+//       { name: 'Variables Exercise', dueDate: '2025-07-01T00:00:00Z' },
+//       { name: 'Functions Project', dueDate: '2025-07-15T00:00:00Z' }
+//     ]
+//   },
+//   {
+//     _id: '2',
+//     name: 'Web Development Basics',
+//     thumbnailUrl: 'https://source.unsplash.com/random/600x400/?web,development',
+//     totalStudents: 28,
+//     activeStudents: 25,
+//     completionRate: 82,
+//     lastUpdated: '2025-06-18T14:15:00Z',
+//     category: 'Web Development',
+//     assignments: [
+//       { name: 'HTML/CSS Portfolio', dueDate: '2025-07-10T00:00:00Z' }
+//     ]
+//   },
+//   {
+//     _id: '3',
+//     name: 'Advanced Machine Learning',
+//     thumbnailUrl: 'https://source.unsplash.com/random/600x400/?machine,learning',
+//     totalStudents: 15,
+//     activeStudents: 12,
+//     completionRate: 45,
+//     lastUpdated: '2025-06-15T09:45:00Z',
+//     category: 'AI',
+//     assignments: [
+//       { name: 'Neural Network Project', dueDate: '2025-08-01T00:00:00Z' },
+//       { name: 'Research Paper Review', dueDate: '2025-07-20T00:00:00Z' }
+//     ]
+//   }
+// ];
 
 const StyledBadge = styled(Badge)(({ theme }) => ({
   '& .MuiBadge-badge': {
@@ -111,36 +114,60 @@ const CompletionRate = styled(Box)(({ theme, rate }) => ({
   },
   '& .MuiLinearProgress-bar': {
     borderRadius: 4,
-    backgroundColor: rate > 70 ? theme.palette.success.main : 
-                      rate > 40 ? theme.palette.warning.main : 
-                      theme.palette.error.main
+    backgroundColor: rate > 70 ? theme.palette.success.main :
+      rate > 40 ? theme.palette.warning.main :
+        theme.palette.error.main
   }
 }));
 
-const InstructorDashboard = ({ user }) => {
+const InstructorDashboard = ({ user, handleLogout }) => {
   const [courses, setCourses] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [notAllowed, setNotAllowed] = useState(false);
+  const navigate = useNavigate();
   const theme = useTheme();
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('jwt_token');
+      if (!token || (user && user.role !== 'instructor')) {
+        setNotAllowed(true);
+        setLoading(false);
+        return;
+      }
 
-  // Fetch instructor courses on mount (fallback to mock data)
+      try {
+        const res = await getStudentCourses(token);
+        const data = await res;
+        if (data) {
+          console.log("Fetched courses:", data);
+          setCourses(data.courses || []);
+        }
+      } catch (err) {
+        console.warn(err.message);
+        setCourses([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkAuth();
+  }, [user]);
+  / Fetch instructor courses on mount (fallback to mock data)/
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         const token = localStorage.getItem('jwt_token');
         if (!token) throw new Error('No token, using mock data');
 
-        const res = await fetch('http://localhost:5000/instructor/courses', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await getInstructorCourses(token)
+        if (!res) throw new Error('API not ready, using mock data');
 
-        if (!res.ok) throw new Error('API not ready, using mock data');
-
-        const data = await res.json();
-        setCourses(data.courses || DEFAULT_INSTRUCTOR_COURSES);
+        const data = await res;
+        console.log("Fetched courses:", data)
+        setCourses(data.courses || []);
       } catch (err) {
         console.warn(err.message);
-        setCourses(DEFAULT_INSTRUCTOR_COURSES);
+        setCourses([]);
       } finally {
         setLoading(false);
       }
@@ -155,7 +182,6 @@ const InstructorDashboard = ({ user }) => {
   const handleCloseDetails = () => {
     setSelectedCourse(null);
   };
-
   if (loading) {
     return (
       <Container maxWidth="xl" sx={{ mt: 4, mb: 6 }}>
@@ -178,6 +204,10 @@ const InstructorDashboard = ({ user }) => {
       </Container>
     );
   }
+  if (notAllowed) {
+    return <NotAllowed role={"instructor"}/>;
+  }
+  
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 6 }}>
@@ -186,6 +216,23 @@ const InstructorDashboard = ({ user }) => {
           Instructor Dashboard
         </Typography>
         <Box display="flex" gap={2}>
+          <Chip
+            label={`Welcome, ${user?.username || 'instructor'}`}
+            color="error"
+            variant="outlined"
+          />
+          <Chip
+            label="Leaderboard"
+            color="primary"
+            variant="outlined"
+            clickable
+            onClick={() => window.open('/student/leaderboard', '_blank')}
+            avatar={
+              <Avatar sx={{ bgcolor: theme.palette.primary.light }}>
+                <StarIcon fontSize="small" />
+              </Avatar>
+            }
+          />
           <Chip
             label={`${courses.length} Courses`}
             color="primary"
@@ -203,6 +250,22 @@ const InstructorDashboard = ({ user }) => {
             avatar={
               <Avatar sx={{ bgcolor: theme.palette.secondary.light }}>
                 <PeopleIcon fontSize="small" />
+              </Avatar>
+            }
+          />
+          <Chip
+            label="Logout"
+            color="error"
+            variant="outlined"
+            clickable
+            onClick={() => {
+              localStorage.removeItem('jwt_token');
+              window.location.reload();
+              handleLogout();
+            }}
+            avatar={
+              <Avatar sx={{ bgcolor: theme.palette.error.light }}>
+                <CheckCircleIcon fontSize="small" />
               </Avatar>
             }
           />
@@ -280,11 +343,11 @@ const InstructorDashboard = ({ user }) => {
                           </Tooltip>
                         </Box>
                       </Box>
-                      
+
                       <Typography variant="h6" fontWeight="bold" gutterBottom>
                         {course.name}
                       </Typography>
-                      
+
                       <CompletionRate rate={course.completionRate}>
                         <Typography variant="body2" color="text.secondary">
                           Completion:
@@ -297,14 +360,14 @@ const InstructorDashboard = ({ user }) => {
                           {course.completionRate}%
                         </Typography>
                       </CompletionRate>
-                      
+
                       <Box display="flex" alignItems="center" mt={2} mb={1} color="text.secondary">
                         <ScheduleIcon fontSize="small" sx={{ mr: 0.5 }} />
                         <Typography variant="body2">
                           Updated: {new Date(course.lastUpdated).toLocaleDateString()}
                         </Typography>
                       </Box>
-                      
+
                       {course.assignments?.length > 0 && (
                         <Box mt={2}>
                           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
@@ -357,7 +420,7 @@ const InstructorDashboard = ({ user }) => {
               </Grid>
             ))}
           </Grid>
-          
+
           {/* Course Details Modal */}
           {selectedCourse && (
             <Card sx={{ mt: 4, p: 3 }}>
@@ -367,17 +430,17 @@ const InstructorDashboard = ({ user }) => {
                 </Typography>
                 <Button onClick={handleCloseDetails}>Close</Button>
               </Box>
-              
+
               <Grid container spacing={3}>
                 <Grid item xs={12} md={6}>
                   <Box sx={{ height: 300 }}>
-                    <StudentProgressChart 
+                    <StudentProgressChart
                       totalStudents={selectedCourse.totalStudents}
                       activeStudents={selectedCourse.activeStudents}
                       completionRate={selectedCourse.completionRate}
                     />
                   </Box>
-                  
+
                   <Box display="flex" justifyContent="space-around" mt={3}>
                     <Box textAlign="center">
                       <Typography variant="h4" color="primary">
@@ -392,15 +455,17 @@ const InstructorDashboard = ({ user }) => {
                       <Typography variant="body2">Active Students</Typography>
                     </Box>
                     <Box textAlign="center">
-                      <Typography variant="h4" sx={{ color: selectedCourse.completionRate > 70 ? 'success.main' : 
-                                                          selectedCourse.completionRate > 40 ? 'warning.main' : 'error.main' }}>
+                      <Typography variant="h4" sx={{
+                        color: selectedCourse.completionRate > 70 ? 'success.main' :
+                          selectedCourse.completionRate > 40 ? 'warning.main' : 'error.main'
+                      }}>
                         {selectedCourse.completionRate}%
                       </Typography>
                       <Typography variant="body2">Completion Rate</Typography>
                     </Box>
                   </Box>
                 </Grid>
-                
+
                 <Grid item xs={12} md={6}>
                   <Typography variant="h6" mb={2}>Recent Activity</Typography>
                   <List sx={{ maxHeight: 400, overflow: 'auto' }}>

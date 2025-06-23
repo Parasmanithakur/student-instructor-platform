@@ -6,45 +6,55 @@ import LoginPage from './LoginPage';
 import StudentDashboard from './Dashboards/StudentDashboard';
 import { useEffect, useState } from 'react';
 import InstructorDashboard from './Dashboards/InstructorDashboard';
+import Leaderboard from './Dashboards/LeaderDashboard';
 
 function App() {
 const [user, setUser] = useState(null);
 
   // On load, try restoring user from localStorage
-  useEffect(() => {
+  function restoreUserFromToken() {
     const token = localStorage.getItem("jwt_token");
     if (token) {
       try {
         const decoded = jwtDecode(token);
         if (decoded.exp * 1000 > Date.now()) {
           setUser({ username: decoded.sub, role: decoded.role, token });
-        } else {
-          localStorage.removeItem("jwt_token"); // expired
         }
-      } catch {
-        localStorage.removeItem("jwt_token"); // bad token
+      } catch (e) {
+        // Handle invalid token or decoding error
+        setUser(null);
       }
     }
-  }, []);
+  }
 
-  const handleLogout = () => {
-    localStorage.removeItem("jwt_token");
-    setUser(null);
-  };
+  useEffect(() => {
+    restoreUserFromToken();
+  }, []);
+  
+
+    const handleLogout = () => {
+      localStorage.removeItem("jwt_token");
+      setUser(null);
+             window.location.pathname = "/";
+    };
+
+    // Redirect to "/" if user logs out
+  
   return (
-    <>
+  <div className="app-container">
      <Router>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage onLogin={setUser} />} />
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/student/dashboard/*" element={<StudentDashboard user={user} />} />
-        <Route path="/instructor/dashboard/*" element={<InstructorDashboard/>} />
-        {/* Add more routes as needed */}
+        <Route path="/student/dashboard/*" element={<StudentDashboard user={user} handleLogout={handleLogout} setUser={restoreUserFromToken} />} />
+        <Route path="/instructor/dashboard/*" element={<InstructorDashboard user={user} handleLogout={handleLogout} setUser={restoreUserFromToken} />}/>  
+       
+        <Route path="/student/leaderboard" element={<Leaderboard user={user}/>} />
       </Routes>
     </Router>
 
-    </>
+    </div>
   )
 }
 
