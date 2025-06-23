@@ -23,6 +23,8 @@ import {
     CheckCircle as CheckCircleIcon,
     Schedule as ScheduleIcon,
     Person as PersonIcon,
+  School as SchoolIcon,
+
     Star as StarIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
@@ -240,6 +242,16 @@ return (
                         </Avatar>
                     }
                 />
+                  <Chip
+                                                    label={`${courses.length} Courses`}
+                                                    color="primary"
+                                                    variant="outlined"
+                                                    avatar={
+                                                      <Avatar sx={{ bgcolor: theme.palette.primary.light }}>
+                                                        <SchoolIcon fontSize="small" />
+                                                      </Avatar>
+                                                    }
+                                                  />
                 <Chip
                     label="Logout"
                     color="error"
@@ -317,6 +329,7 @@ return (
                                             color="secondary"
                                             variant="outlined"
                                         />
+                                       
                                         {course.isCompleted && (
                                             <Chip
                                                 label="Completed"

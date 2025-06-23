@@ -30,7 +30,8 @@ import {
   BarChart as AnalyticsIcon,
   Message as MessageIcon,
   Edit as EditIcon,
-  MoreVert as MoreIcon
+  MoreVert as MoreIcon,
+   Star as StarIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { styled } from '@mui/material/styles';

@@ -31,7 +31,7 @@
     ```
 4. ### Environment Variables
 
-Create a `.env` file in the `backend` directory     
+Create a `.env` file in the `backend` directory  , pls check .env file in mail
 5. Start the backend server:
     ```bash
     python main.py
@@ -53,8 +53,15 @@ Create a `.env` file in the `backend` directory
   npm run dev
     ```
 
-The frontend will typically run on [http://localhost:3000](http://localhost:3000) and the backend on [http://localhost:5000](http://localhost:5000) by default.
+The frontend will typically run on [http://localhost:5173](http://localhost:5173) and the backend on [http://localhost:5000](http://localhost:5000) by default.
 
 
 
 
+---
+
+## Things to Note
+
+- **Slowness of Response**: The application may experience slow responses due to the use of a free MongoDB tier.
+- **API Keys Security**: Do **not** share your OpenAI or MongoDB keys. Exposing these keys can lead to unauthorized usage and potential charges.
+- **OpenAI Usage**: Be aware that excessive API calls to OpenAI may result in additional charges to my account :( .
